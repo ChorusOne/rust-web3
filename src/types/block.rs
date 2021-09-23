@@ -2,6 +2,7 @@ use crate::types::{Bytes, H160, H2048, H256, H64, U256, U64};
 use serde::{ser::SerializeStruct, Deserialize, Deserializer, Serialize, Serializer};
 
 /// The block header type returned from RPC calls.
+#[cfg(not(feature = "celo"))]
 #[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct BlockHeader {
     /// Hash of the block
@@ -52,8 +53,43 @@ pub struct BlockHeader {
     pub nonce: Option<H64>,
 }
 
+/// The block header type returned from RPC calls. - Celo Blockchain
+#[cfg(feature = "celo")]
+#[derive(Debug, Clone, PartialEq, Deserialize, Serialize)]
+pub struct BlockHeader {
+    /// Hash of the parent
+    #[serde(rename = "parentHash")]
+    pub parent_hash: H256,
+    /// Miner/author's address.
+    #[serde(rename = "miner", default, deserialize_with = "null_to_default")]
+    pub author: H160,
+    /// State root hash
+    #[serde(rename = "stateRoot")]
+    pub state_root: H256,
+    /// Transactions root hash
+    #[serde(rename = "transactionsRoot")]
+    pub transactions_root: H256,
+    /// Transactions receipts root hash
+    #[serde(rename = "receiptsRoot")]
+    pub receipts_root: H256,
+    /// Block number. None if pending.
+    pub number: Option<U64>,
+    /// Gas Used
+    #[serde(rename = "gasUsed")]
+    pub gas_used: U256,
+    /// Extra data
+    #[serde(rename = "extraData")]
+    pub extra_data: Bytes,
+    /// Logs bloom
+    #[serde(rename = "logsBloom")]
+    pub logs_bloom: H2048,
+    /// Timestamp
+    pub timestamp: U256,
+}
+
 /// The block type returned from RPC calls.
 /// This is generic over a `TX` type.
+#[cfg(not(feature = "celo"))]
 #[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
 pub struct Block<TX> {
     /// Hash of the block
@@ -105,6 +141,58 @@ pub struct Block<TX> {
     pub seal_fields: Vec<Bytes>,
     /// Uncles' hashes
     pub uncles: Vec<H256>,
+    /// Transactions
+    pub transactions: Vec<TX>,
+    /// Size in bytes
+    pub size: Option<U256>,
+    /// Mix Hash
+    #[serde(rename = "mixHash")]
+    pub mix_hash: Option<H256>,
+    /// Nonce
+    pub nonce: Option<H64>,
+}
+
+/// The block type returned from RPC calls. - Celo Blockchain
+/// This is generic over a `TX` type.
+#[cfg(feature = "celo")]
+#[derive(Debug, Default, Clone, PartialEq, Deserialize, Serialize)]
+pub struct Block<TX> {
+    /// Hash of the block
+    pub hash: Option<H256>,
+    /// Hash of the parent
+    #[serde(rename = "parentHash")]
+    pub parent_hash: H256,
+    /// Miner/author's address.
+    #[serde(rename = "miner", default, deserialize_with = "null_to_default")]
+    pub author: H160,
+    /// State root hash
+    #[serde(rename = "stateRoot")]
+    pub state_root: H256,
+    /// Transactions root hash
+    #[serde(rename = "transactionsRoot")]
+    pub transactions_root: H256,
+    /// Transactions receipts root hash
+    #[serde(rename = "receiptsRoot")]
+    pub receipts_root: H256,
+    /// Block number. None if pending.
+    pub number: Option<U64>,
+    /// Gas Used
+    #[serde(rename = "gasUsed")]
+    pub gas_used: U256,
+    /// Base fee per unit of gas (if past London)
+    #[serde(rename = "baseFeePerGas", skip_serializing_if = "Option::is_none")]
+    pub base_fee_per_gas: Option<U256>,
+    /// Extra data
+    #[serde(rename = "extraData")]
+    pub extra_data: Bytes,
+    /// Logs bloom
+    #[serde(rename = "logsBloom")]
+    pub logs_bloom: Option<H2048>,
+    /// Timestamp
+    pub timestamp: U256,
+    /// Seal fields
+    #[serde(default, rename = "sealFields")]
+    pub seal_fields: Vec<Bytes>,
     /// Transactions
     pub transactions: Vec<TX>,
     /// Size in bytes

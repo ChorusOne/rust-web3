@@ -1,3 +1,7 @@
+### ChorusOne note:
+Fork of official rust-web3 repository.
+Adding support for Celo blockchain
+
 # web3
 
 Ethereum JSON-RPC multi-transport client.
