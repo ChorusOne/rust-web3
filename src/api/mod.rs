@@ -4,6 +4,8 @@ mod accounts;
 mod eth;
 mod eth_filter;
 mod eth_subscribe;
+#[cfg(feature = "celo")]
+mod istanbul;
 mod net;
 mod parity;
 mod parity_accounts;
@@ -12,6 +14,9 @@ mod personal;
 mod traces;
 mod txpool;
 mod web3;
+
+#[cfg(feature = "celo")]
+pub use self::istanbul::Istanbul;
 
 pub use self::{
     accounts::Accounts,
@@ -119,6 +124,12 @@ impl<T: Transport> Web3<T> {
 
     /// Access methods from `txpool` namespace
     pub fn txpool(&self) -> txpool::Txpool<T> {
+        self.api()
+    }
+
+    #[cfg(feature = "celo")]
+    /// Access methods from `istanbul` namespace
+    pub fn istanbul(&self) -> istanbul::Istanbul<T> {
         self.api()
     }
 
