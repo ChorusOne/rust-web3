@@ -206,6 +206,25 @@ impl Tokenizable for Address {
     }
 }
 
+#[cfg(feature = "prost_any")]
+pub mod prost_any_tokenizable {
+    use super::*;
+    use ethabi::Token;
+    use prost::Message;
+    impl Tokenizable for prost_types::Any {
+        fn from_token(token: Token) -> Result<Self, Error> {
+            match token {
+                Token::Bytes(data) => Self::decode(data.as_slice())
+                    .map_err(|e| Error::InvalidOutputType(format!("prost decodeError : {:?}", e))),
+                other => Err(Error::InvalidOutputType(format!("Expected `Address`, got {:?}", other))),
+            }
+        }
+        fn into_token(self) -> Token {
+            Token::Bytes(self.encode_to_vec())
+        }
+    }
+}
+
 macro_rules! eth_uint_tokenizable {
     ($uint: ident, $name: expr) => {
         impl Tokenizable for $uint {
@@ -506,5 +525,27 @@ mod tests {
         assert_eq!((-3i32).into_token(), Token::Int(U256::MAX - 2));
         assert_eq!((-4i64).into_token(), Token::Int(U256::MAX - 3));
         assert_eq!((-5i128).into_token(), Token::Int(U256::MAX - 4));
+    }
+}
+
+#[cfg(all(test, feature = "prost_any"))]
+mod prost_any_tokenizable_test {
+    use crate::contract::tokens::Tokenizable;
+    #[test]
+    fn encode_prost_any() {
+        let element = prost_types::Any {
+            type_url: String::from("/type"),
+            value: vec![0; 5],
+        };
+        let tok = element.into_token();
+        assert_eq!(
+            tok,
+            ethabi::Token::Bytes(vec![
+                10, 5, '/' as u8, 't' as u8, 'y' as u8, 'p' as u8, 'e' as u8, 18, 5, 0, 0, 0, 0, 0
+            ])
+        );
+        let result = prost_types::Any::from_token(tok).unwrap();
+        assert_eq!("type", result.type_url);
+
     }
 }
