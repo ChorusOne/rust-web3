@@ -28,8 +28,6 @@ impl<T: Transport> Namespace<T> for Istanbul<T> {
 impl<T: Transport> Istanbul<T> {
     /// Get Istanbul consensus snapshot
     pub fn snapshot<Validator>(&self, block: BlockId) -> CallFuture<Option<Snapshot<Validator>>, T::Out> {
-        let include_txs = helpers::serialize(&false);
-
         let result = match block {
             BlockId::Hash(hash) => {
                 let hash = helpers::serialize(&hash);
@@ -37,7 +35,7 @@ impl<T: Transport> Istanbul<T> {
             }
             BlockId::Number(num) => {
                 let num = helpers::serialize(&num);
-                self.transport.execute("istanbul_getSnapshot", vec![num, include_txs])
+                self.transport.execute("istanbul_getSnapshot", vec![num])
             }
         };
 
